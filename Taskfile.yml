@@ -1,0 +1,53 @@
+version: '3'
+
+env:
+  D_COMPOSE: docker compose -f docker-compose.yaml
+  WEB_DOCKERFILE: Dockerfile
+  API_V2_DOCKERFILE: api.v2.Dockerfile
+  CONTAINERS: calcom-web calcom-api-v2 calcom-database calcom-redis
+
+tasks:
+  clean:
+    cmds:
+      - docker stop $CONTAINERS || true
+      - docker rm -f $CONTAINERS  || true
+      - docker image rm calcom.docker.scarf.sh/calcom/cal.com calcom-api-v2 || true
+      - docker volume prune -f || true
+
+  run-dbs:
+    cmds:
+      - $D_COMPOSE up -d database redis
+
+##########################################
+################### WEB ##################
+##########################################
+
+  web-build:
+    cmds:
+      - DOCKER_BUILDKIT=0 $D_COMPOSE build web
+  web-up:
+    cmds:
+      - $D_COMPOSE up web
+  web-start:
+    cmds:
+      - $D_COMPOSE up -d web
+  web-stop:
+    cmds:
+      - $D_COMPOSE stop web
+
+##########################################
+############# CALCOM API V2 ##############
+##########################################
+
+  api-v2-build:
+      cmds:
+      - DOCKER_BUILDKIT=0 $D_COMPOSE build api-v2
+  api-v2-up:
+      cmds:
+      - $D_COMPOSE up api-v2
+  api-v2-start:
+      cmds:
+      - $D_COMPOSE up -d api-v2
+  api-v2-stop:
+      cmds:
+      - $D_COMPOSE stop api-v2

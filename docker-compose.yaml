@@ -3,15 +3,29 @@ version: '3.8'
 
 volumes:
   database-data:
+  redis_data:
 
 networks:
   stack:
     name: stack
     external: false
+  calcom:
+    name: calcom
+    external: true
 
 services:
+  redis:
+    container_name: calcom-redis
+    image: redis
+    restart: always
+    volumes:
+      - redis_data:/data
+    networks:
+      - stack
+    command: redis-server --appendonly yes
+
   database:
-    container_name: database
+    container_name: calcom-database
     image: postgres
     restart: always
     volumes:
@@ -20,7 +34,28 @@ services:
     networks:
       - stack
 
-  calcom:
+  api-v2:
+    container_name: calcom-api-v2
+    image: calcom-api
+    build:
+      context: ./calcom
+      dockerfile: apps/api/v2/Dockerfile
+    restart: always
+    networks:
+      - stack
+      - calcom
+    ports:
+      - 3001:3001
+    env_file: .env
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${DATABASE_HOST}/${POSTGRES_DB}
+      - DATABASE_DIRECT_URL=${DATABASE_URL}
+    depends_on:
+      - database
+      - redis
+
+  web:
+    container_name: calcom-web
     image: calcom.docker.scarf.sh/calcom/cal.com
     build:
       context: .
@@ -49,6 +84,7 @@ services:
 
 # Optional use of Prisma Studio. In production, comment out or remove the section below to prevent unwanted access to your database.
   studio:
+    container_name: calcom-studio
     image: calcom.docker.scarf.sh/calcom/cal.com
     restart: always
     networks:
