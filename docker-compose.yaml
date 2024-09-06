@@ -3,7 +3,7 @@ version: '3.8'
 
 volumes:
   database-data:
-  redis_data:
+  redis-data:
 
 networks:
   stack:
@@ -14,32 +14,34 @@ networks:
     external: true
 
 services:
-  redis:
+  calcom-redis:
     container_name: calcom-redis
     image: redis
     restart: always
     volumes:
-      - redis_data:/data
+      - redis-data:/data
     networks:
       - stack
     command: redis-server --appendonly yes
 
-  database:
+  calcom-database:
     container_name: calcom-database
     image: postgres
     restart: always
     volumes:
       - database-data:/var/lib/postgresql/data/
+    ports:
+      - 5454:5432
     env_file: .env
     networks:
       - stack
 
-  api-v2:
+  calcom-api-v2:
     container_name: calcom-api-v2
-    image: calcom-api
+    image: calcom-api-v2
     build:
-      context: ./calcom
-      dockerfile: apps/api/v2/Dockerfile
+      context: .
+      dockerfile: api.v2.Dockerfile
     restart: always
     networks:
       - stack
@@ -48,18 +50,48 @@ services:
       - 3001:3001
     env_file: .env
     environment:
-      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${DATABASE_HOST}/${POSTGRES_DB}
-      - DATABASE_DIRECT_URL=${DATABASE_URL}
+      NODE_ENV: production
+      NEXT_PUBLIC_WEBAPP_URL: ${WEB_URL}
+      NEXT_PUBLIC_API_V2_URL: ${API_V2_URL}
+      NEXT_PUBLIC_LICENSE_CONSENT: ${NEXT_PUBLIC_LICENSE_CONSENT}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+      POSTGRES_USER: ${CALCOM_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${CALCOM_POSTGRES_PASSWORD}
+      POSTGRES_DB: ${CALCOM_POSTGRES_DB}
+      DATABASE_HOST: ${CALCOM_DATABASE_HOST}
+      DATABASE_URL: ${CALCOM_DATABASE_URL}
+      DIRECT_DATABASE_URL: ${CALCOM_DATABASE_URL}
+      CALCOM_LICENSE_KEY: ${CALCOM_LICENSE_KEY}
+      API_PORT: ${API_PORT}
+      API_URL: ${API_V2_URL}
+      DATABASE_READ_URL: ${CALCOM_DATABASE_URL}
+      DATABASE_WRITE_URL: ${CALCOM_DATABASE_URL}
+      LOG_LEVEL: ${LOG_LEVEL}
+      JWT_SECRET: ${JWT_SECRET}
+      REDIS_URL: ${REDIS_URL}
+      NEXT_PUBLIC_SENTRY_DSN: ${NEXT_PUBLIC_SENTRY_DSN}
+      STRIPE_PRICE_ID_STARTER: ${STRIPE_PRICE_ID_STARTER}
+      STRIPE_PRICE_ID_STARTER_OVERAGE: ${STRIPE_PRICE_ID_STARTER_OVERAGE}
+      STRIPE_PRICE_ID_ESSENTIALS: ${STRIPE_PRICE_ID_ESSENTIALS}
+      STRIPE_PRICE_ID_ESSENTIALS_OVERAGE: ${STRIPE_PRICE_ID_ESSENTIALS_OVERAGE}
+      STRIPE_PRICE_ID_ENTERPRISE: ${STRIPE_PRICE_ID_ENTERPRISE}
+      STRIPE_PRICE_ID_ENTERPRISE_OVERAGE: ${STRIPE_PRICE_ID_ENTERPRISE_OVERAGE}
+      STRIPE_API_KEY: ${STRIPE_API_KEY}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
+      WEB_APP_URL: ${WEB_URL}
+      API_KEY_PREFIX: ${API_KEY_PREFIX}
+      GET_LICENSE_KEY_URL: ${GET_LICENSE_KEY_URL}
+      IS_E2E: ${IS_E2E}
     depends_on:
-      - database
-      - redis
+      - calcom-database
+      - calcom-redis
 
-  web:
+  calcom-web:
     container_name: calcom-web
     image: calcom.docker.scarf.sh/calcom/cal.com
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: web.Dockerfile
       args:
         NEXT_PUBLIC_WEBAPP_URL: ${NEXT_PUBLIC_WEBAPP_URL}
         NEXT_PUBLIC_API_V2_URL: ${NEXT_PUBLIC_API_V2_URL}
@@ -67,23 +99,50 @@ services:
         CALCOM_TELEMETRY_DISABLED: ${CALCOM_TELEMETRY_DISABLED}
         NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
         CALENDSO_ENCRYPTION_KEY: ${CALENDSO_ENCRYPTION_KEY}
-        DATABASE_URL: ${DATABASE_URL}
-        DATABASE_DIRECT_URL: ${DATABASE_URL}
+        DATABASE_URL: ${CALCOM_DATABASE_URL}
+        DATABASE_DIRECT_URL: ${CALCOM_DATABASE_URL}
       network: stack
     restart: always
     networks:
       - stack
+      - calcom
     ports:
       - 3000:3000
     env_file: .env
     environment:
-      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${DATABASE_HOST}/${POSTGRES_DB}
-      - DATABASE_DIRECT_URL=${DATABASE_URL}
+      NODE_ENV: ${NODE_ENV}
+      NEXT_PUBLIC_WEBAPP_URL: ${WEB_URL}
+      NEXT_PUBLIC_API_V2_URL: ${API_V2_URL}
+      NEXT_PUBLIC_LICENSE_CONSENT: ${NEXT_PUBLIC_LICENSE_CONSENT}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+      POSTGRES_USER: ${CALCOM_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${CALCOM_POSTGRES_PASSWORD}
+      POSTGRES_DB: ${CALCOM_POSTGRES_DB}
+      DATABASE_HOST: ${CALCOM_DATABASE_HOST}
+      DATABASE_URL: ${CALCOM_DATABASE_URL}
+      DIRECT_DATABASE_URL: $CALCOM_{DATABASE_URL}
+      CALCOM_LICENSE_KEY: ${CALCOM_LICENSE_KEY}
+      CAL_SIGNATURE_TOKEN: ${CAL_SIGNATURE_TOKEN}
+      CALCOM_PRIVATE_API_ROUTE: ${CALCOM_PRIVATE_API_ROUTE}
+      ALLOWED_HOSTNAMES: ${ALLOWED_HOSTNAMES}
+      CALENDSO_ENCRYPTION_KEY: ${CALENDSO_ENCRYPTION_KEY}
+      DATABASE_DIRECT_URL: ${CALCOM_DATABASE_URL}
+      GOOGLE_API_CREDENTIALS: ${GOOGLE_API_CREDENTIALS}
+      CALCOM_TELEMETRY_DISABLED: ${CALCOM_TELEMETRY_DISABLED}
+      MS_GRAPH_CLIENT_ID: ${MS_GRAPH_CLIENT_ID}
+      MS_GRAPH_CLIENT_SECRET: ${MS_GRAPH_CLIENT_SECRET}
+      ZOOM_CLIENT_ID: ${ZOOM_CLIENT_ID}
+      ZOOM_CLIENT_SECRET: ${ZOOM_CLIENT_SECRET}
+      EMAIL_FROM: ${EMAIL_FROM}
+      EMAIL_SERVER_HOST: ${EMAIL_SERVER_HOST}
+      EMAIL_SERVER_PORT: ${EMAIL_SERVER_PORT}
+      EMAIL_SERVER_USER: ${EMAIL_SERVER_USER}
+      EMAIL_SERVER_PASSWORD: ${EMAIL_SERVER_PASSWORD}
     depends_on:
-      - database
+      - calcom-database
 
 # Optional use of Prisma Studio. In production, comment out or remove the section below to prevent unwanted access to your database.
-  studio:
+  calcom-studio:
     container_name: calcom-studio
     image: calcom.docker.scarf.sh/calcom/cal.com
     restart: always
@@ -93,10 +152,10 @@ services:
       - 5555:5555
     env_file: .env
     environment:
-      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${DATABASE_HOST}/${POSTGRES_DB}
-      - DATABASE_DIRECT_URL=${DATABASE_URL}
+      DATABASE_URL: ${CALCOM_DATABASE_URL}
+      DATABASE_DIRECT_URL: ${CALCOM_DATABASE_URL}
     depends_on:
-      - database
+      - calcom-database
     command:
       - npx
       - prisma

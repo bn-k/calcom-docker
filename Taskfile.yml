@@ -7,6 +7,22 @@ env:
   CONTAINERS: calcom-web calcom-api-v2 calcom-database calcom-redis
 
 tasks:
+##########################################
+################## TASKS #################
+##########################################
+  build:
+      cmds:
+      - DOCKER_BUILDKIT=0 $D_COMPOSE build --no-cache calcom-web calcom-api-v2
+  up:
+    cmds:
+      - $D_COMPOSE up calcom-web calcom-api-v2
+  start:
+    cmds:
+      - $D_COMPOSE up -d calcom-web calcom-api-v2
+  stop:
+    cmds:
+      - $D_COMPOSE stop calcom-web calcom-api-v2
+
   clean:
     cmds:
       - docker stop $CONTAINERS || true
@@ -14,9 +30,10 @@ tasks:
       - docker image rm calcom.docker.scarf.sh/calcom/cal.com calcom-api-v2 || true
       - docker volume prune -f || true
 
-  run-dbs:
+  init-db:
     cmds:
-      - $D_COMPOSE up -d database redis
+      - docker network create calcom || true
+      - $D_COMPOSE up -d calcom-database calcom-redis
 
 ##########################################
 ################### WEB ##################
@@ -24,16 +41,16 @@ tasks:
 
   web-build:
     cmds:
-      - DOCKER_BUILDKIT=0 $D_COMPOSE build web
+      - DOCKER_BUILDKIT=0 $D_COMPOSE build calcom-web
   web-up:
     cmds:
-      - $D_COMPOSE up web
+      - $D_COMPOSE up calcom-web
   web-start:
     cmds:
-      - $D_COMPOSE up -d web
+      - $D_COMPOSE up -d calcom-web
   web-stop:
     cmds:
-      - $D_COMPOSE stop web
+      - $D_COMPOSE stop calcom-web
 
 ##########################################
 ############# CALCOM API V2 ##############
@@ -41,13 +58,13 @@ tasks:
 
   api-v2-build:
       cmds:
-      - DOCKER_BUILDKIT=0 $D_COMPOSE build api-v2
+      - DOCKER_BUILDKIT=1 $D_COMPOSE build calcom-api-v2
   api-v2-up:
       cmds:
-      - $D_COMPOSE up api-v2
+      - $D_COMPOSE up calcom-api-v2
   api-v2-start:
       cmds:
-      - $D_COMPOSE up -d api-v2
+      - $D_COMPOSE up -d calcom-api-v2
   api-v2-stop:
       cmds:
-      - $D_COMPOSE stop api-v2
+      - $D_COMPOSE stop calcom-api-v2
