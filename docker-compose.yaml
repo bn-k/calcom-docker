@@ -30,8 +30,8 @@ services:
     restart: always
     volumes:
       - database-data:/var/lib/postgresql/data/
-    ports:
-      - 5454:5432
+#    ports:
+#      - 5454:5432
     env_file: .env
     networks:
       - stack
@@ -46,8 +46,8 @@ services:
     networks:
       - stack
       - calcom
-    ports:
-      - 3001:3001
+#    ports:
+#      - 3001:3001
     env_file: .env
     environment:
       NODE_ENV: production
@@ -106,8 +106,8 @@ services:
     networks:
       - stack
       - calcom
-    ports:
-      - 3000:3000
+#    ports:
+#      - 3000:3000
     env_file: .env
     environment:
       NODE_ENV: ${NODE_ENV}
@@ -148,8 +148,8 @@ services:
     restart: always
     networks:
       - stack
-    ports:
-      - 5555:5555
+#    ports:
+#      - 5555:5555
     env_file: .env
     environment:
       DATABASE_URL: ${CALCOM_DATABASE_URL}
