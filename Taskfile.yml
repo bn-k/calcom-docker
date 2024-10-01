@@ -11,8 +11,13 @@ tasks:
 ################## TASKS #################
 ##########################################
   build:
+<<<<<<< HEAD
+      cmds:
+      - task: init-db
+=======
     desc: Build all the services
     cmds:
+>>>>>>> aa2bc919c63f9309808c7d63ce708129287a5106
       - DOCKER_BUILDKIT=0 $D_COMPOSE build --no-cache calcom-web calcom-api-v2
   up:
     desc: Start all the services
@@ -25,7 +30,11 @@ tasks:
   stop:
     desc: Stop all the services
     cmds:
-      - $D_COMPOSE stop calcom-web calcom-api-v2
+      - $D_COMPOSE stop
+  restart:
+    cmds:
+      - task: stop
+      - task: start
 
   clean:
     desc: Clean all the services
