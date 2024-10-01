@@ -30,8 +30,8 @@ services:
     restart: always
     volumes:
       - database-data:/var/lib/postgresql/data/
-#    ports:
-#      - 5454:5432
+    ports:
+      - 5454:5432
     env_file: .env
     networks:
       - stack
@@ -50,7 +50,7 @@ services:
 #      - 3001:3001
     env_file: .env
     environment:
-      NODE_ENV: production
+      NODE_ENV: ${NODE_ENV}
       NEXT_PUBLIC_WEBAPP_URL: ${WEB_URL}
       NEXT_PUBLIC_API_V2_URL: ${API_V2_URL}
       NEXT_PUBLIC_LICENSE_CONSENT: ${NEXT_PUBLIC_LICENSE_CONSENT}
