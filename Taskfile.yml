@@ -12,6 +12,7 @@ tasks:
 ##########################################
   build:
       cmds:
+      - task: init-db
       - DOCKER_BUILDKIT=0 $D_COMPOSE build --no-cache calcom-web calcom-api-v2
   up:
     cmds:
@@ -21,7 +22,11 @@ tasks:
       - $D_COMPOSE up -d calcom-web calcom-api-v2
   stop:
     cmds:
-      - $D_COMPOSE stop calcom-web calcom-api-v2
+      - $D_COMPOSE stop
+  restart:
+    cmds:
+      - task: stop
+      - task: start
 
   clean:
     cmds:
