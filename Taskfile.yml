@@ -11,16 +11,24 @@ tasks:
 ################## TASKS #################
 ##########################################
   build:
+<<<<<<< HEAD
       cmds:
       - task: init-db
+=======
+    desc: Build all the services
+    cmds:
+>>>>>>> aa2bc919c63f9309808c7d63ce708129287a5106
       - DOCKER_BUILDKIT=0 $D_COMPOSE build --no-cache calcom-web calcom-api-v2
   up:
+    desc: Start all the services
     cmds:
       - $D_COMPOSE up calcom-web calcom-api-v2
   start:
+    desc: Start all the services in detached mode
     cmds:
       - $D_COMPOSE up -d calcom-web calcom-api-v2
   stop:
+    desc: Stop all the services
     cmds:
       - $D_COMPOSE stop
   restart:
@@ -29,6 +37,7 @@ tasks:
       - task: start
 
   clean:
+    desc: Clean all the services
     cmds:
       - docker stop $CONTAINERS || true
       - docker rm -f $CONTAINERS  || true
@@ -36,6 +45,7 @@ tasks:
       - docker volume prune -f || true
 
   init-db:
+    desc: Initialize the database
     cmds:
       - docker network create calcom || true
       - $D_COMPOSE up -d calcom-database calcom-redis
@@ -45,15 +55,19 @@ tasks:
 ##########################################
 
   web-build:
+    desc: Build the web service
     cmds:
       - DOCKER_BUILDKIT=0 $D_COMPOSE build calcom-web
   web-up:
+    desc: Start the web service
     cmds:
       - $D_COMPOSE up calcom-web
   web-start:
+    desc: Start the web service in detached mode
     cmds:
       - $D_COMPOSE up -d calcom-web
   web-stop:
+    desc: Stop the web service
     cmds:
       - $D_COMPOSE stop calcom-web
 
@@ -62,14 +76,18 @@ tasks:
 ##########################################
 
   api-v2-build:
-      cmds:
+    desc: Build the calcom-api-v2 service
+    cmds:
       - DOCKER_BUILDKIT=1 $D_COMPOSE build calcom-api-v2
   api-v2-up:
-      cmds:
+    desc: Start the calcom-api-v2 service
+    cmds:
       - $D_COMPOSE up calcom-api-v2
   api-v2-start:
-      cmds:
+    desc: Start the calcom-api-v2 service in detached mode
+    cmds:
       - $D_COMPOSE up -d calcom-api-v2
   api-v2-stop:
-      cmds:
+    desc: Stop the calcom-api-v2 service
+    cmds:
       - $D_COMPOSE stop calcom-api-v2
