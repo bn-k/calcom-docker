@@ -33,8 +33,13 @@ services:
     ports:
       - 5454:5432
     env_file: .env
+    environment:
+      POSTGRES_USER: ${CALCOM_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${CALCOM_POSTGRES_PASSWORD}
+      POSTGRES_DB: ${CALCOM_POSTGRES_DB}
     networks:
       - stack
+      - calcom
 
   calcom-api-v2:
     container_name: calcom-api-v2
