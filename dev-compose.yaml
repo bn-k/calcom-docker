@@ -1,0 +1,10 @@
+services:
+  calcom-database:
+    ports:
+      - 5454:5432
+  calcom-api-v2:
+    ports:
+      - 3001:3001
+  calcom-web:
+    ports:
+      - 3000:3000

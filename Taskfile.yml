@@ -2,11 +2,17 @@ version: '3'
 
 env:
   D_COMPOSE: docker compose -f docker-compose.yaml
+  DEV_COMPOSE: docker compose -f docker-compose.yaml -f dev-compose.yaml
   WEB_DOCKERFILE: Dockerfile
   API_V2_DOCKERFILE: api.v2.Dockerfile
   CONTAINERS: calcom-web calcom-api-v2 calcom-database calcom-redis
 
 tasks:
+  default:
+    desc: Run the build task
+    cmds:
+      - $DEV_COMPOSE up -d calcom-database calcom-api-v2 calcom-web
+
 ##########################################
 ################## TASKS #################
 ##########################################
@@ -17,11 +23,15 @@ tasks:
   up:
     desc: Start all the services
     cmds:
-      - $D_COMPOSE up calcom-web calcom-api-v2
+      - $D_COMPOSE up -d calcom-web calcom-api-v2
   start:
     desc: Start all the services in detached mode
     cmds:
       - $D_COMPOSE up -d calcom-web calcom-api-v2
+  logs:
+    desc: Show the logs of all the services
+    cmds:
+      - $D_COMPOSE logs -f --tail 300
   stop:
     desc: Stop all the services
     cmds:
@@ -30,25 +40,30 @@ tasks:
     cmds:
       - task: stop
       - task: start
-
   clean:
-    desc: Clean all the services
+    desc: Stop and remove all the services
     cmds:
-      - docker stop $CONTAINERS || true
-      - docker rm -f $CONTAINERS  || true
-      - docker image rm calcom.docker.scarf.sh/calcom/cal.com calcom-api-v2 || true
-      - docker volume prune -f || true
-
-  init-db:
+      - $D_COMPOSE down --volumes --remove-orphans --rmi local
+  db-drop:
+    desc: Clean the database
+    cmds:
+      - docker exec -e PGPASSWORD=${CALCOM_POSTGRES_PASSWORD} calcom-database psql -U ${CALCOM_POSTGRES_USER} -d ${CALCOM_POSTGRES_NAME} -c "TRUNCATE TABLE users CASCADE;"
+  db-init:
     desc: Initialize the database
     cmds:
       - docker network create calcom || true
       - $D_COMPOSE up -d calcom-database calcom-redis
+  full-init:
+    desc: Init all
+    cmds:
+      - task: db-init # db is required - table creation are done in the next step
+      - task: build
+      - task: up
+      - task: logs
 
 ##########################################
 ################### WEB ##################
 ##########################################
-
   web-build:
     desc: Build the web service
     cmds:
@@ -69,7 +84,6 @@ tasks:
 ##########################################
 ############# CALCOM API V2 ##############
 ##########################################
-
   api-v2-build:
     desc: Build the calcom-api-v2 service
     cmds:
@@ -77,7 +91,7 @@ tasks:
   api-v2-up:
     desc: Start the calcom-api-v2 service
     cmds:
-      - $D_COMPOSE up calcom-api-v2
+      - $D_COMPOSE up -d calcom-database calcom-redis calcom-api-v2
   api-v2-start:
     desc: Start the calcom-api-v2 service in detached mode
     cmds:
