@@ -11,7 +11,7 @@ tasks:
   default:
     desc: Run the build task
     cmds:
-      - $DEV_COMPOSE up -d calcom-database calcom-api-v2 calcom-web
+      - $DEV_COMPOSE up -d calcom-database calcom-api-v2 # calcom-web
 
 ##########################################
 ################## TASKS #################
